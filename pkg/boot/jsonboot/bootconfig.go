@@ -5,10 +5,13 @@
 package jsonboot
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,6 +20,8 @@ import (
 	"github.com/u-root/u-root/pkg/boot/kexec"
 	"github.com/u-root/u-root/pkg/boot/multiboot"
 	"github.com/u-root/u-root/pkg/crypto"
+
+	"golang.org/x/sys/cpu"
 )
 
 // BootConfig is a general-purpose boot configuration. It draws some
@@ -144,9 +149,38 @@ func (bc *BootConfig) Boot() error {
 	crypto.TryMeasureData(crypto.BootConfigPCR, bc.bytestream(), "bootconfig")
 	crypto.TryMeasureFiles(bc.FileNames()...)
 	if bc.Kernel != "" {
-		kernel, err := os.Open(bc.Kernel)
-		if err != nil {
-			return fmt.Errorf("can't open kernel file for measurement: %v", err)
+		fmt.Printf("bc.Kernel: %s\n", bc.Kernel)
+		var kernel *os.File
+		var err error
+		if cpu.ARM64.HasFP {
+			zimage, err := os.Open(bc.Kernel)
+			if err != nil {
+				return fmt.Errorf("can't open zimage file for measurement: %v", err)
+			}
+			reader, err := gzip.NewReader(zimage)
+			if err != nil {
+				return fmt.Errorf("can't open zimage reader for measurement: %v", err)
+			}
+			image, err := ioutil.TempFile("", "Image")
+			if err != nil {
+				return fmt.Errorf("can't open image temp file for measurement: %v", err)
+			}
+			if _, err := io.Copy(image, reader); err != nil {
+				return fmt.Errorf("can't copy zimage for measurement: %v", err)
+			}
+			if image != nil { image.Close() }
+			if reader != nil { reader.Close() }
+			if zimage != nil { zimage.Close() }
+			fmt.Printf("Decompressed Kernel: %s\n", image.Name())
+			kernel, err = os.Open(image.Name())
+			if err != nil {
+				return fmt.Errorf("can't open decompressed kernel file for measurement: %v", err)
+			}
+		} else {
+			kernel, err = os.Open(bc.Kernel)
+			if err != nil {
+				return fmt.Errorf("can't open kernel file for measurement: %v", err)
+			}
 		}
 		var initramfs *os.File
 		if bc.Initramfs != "" {
