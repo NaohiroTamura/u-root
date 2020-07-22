@@ -5,10 +5,12 @@
 package jsonboot
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -144,10 +146,46 @@ func (bc *BootConfig) Boot() error {
 	crypto.TryMeasureData(crypto.BootConfigPCR, bc.bytestream(), "bootconfig")
 	crypto.TryMeasureFiles(bc.FileNames()...)
 	if bc.Kernel != "" {
-		kernel, err := os.Open(bc.Kernel)
+		fmt.Printf("bc.Kernel: %s\n", bc.Kernel)
+		zimage, err := os.Open(bc.Kernel)
 		if err != nil {
-			return fmt.Errorf("can't open kernel file for measurement: %v", err)
+			return fmt.Errorf("can't open zimage file for measurement: %v", err)
 		}
+
+		reader, err := gzip.NewReader(zimage)
+		if err != nil {
+			panic(err)
+		}
+		bc.Kernel = "/tmp/Image"
+		image, err := os.OpenFile("/tmp/Image", os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			panic(err)
+		}
+		if _, err := io.Copy(image, reader); err != nil {
+			panic(err)
+		}
+		if image != nil {
+			if err := image.Close(); err != nil {
+				log.Printf("Error closing image file descriptor: %v", err)
+			}
+		}
+		if reader != nil {
+			if err := reader.Close(); err != nil {
+				log.Printf("Error closing reader file descriptor: %v", err)
+			}
+		}
+		if zimage != nil {
+			if err := zimage.Close(); err != nil {
+				log.Printf("Error closing image file descriptor: %v", err)
+			}
+		}
+		fmt.Printf("bc.Kernel: %s\n", bc.Kernel)
+		kernel, err := os.Open("/tmp/Image")
+		if err != nil {
+			panic(err)
+		}
+
+
 		var initramfs *os.File
 		if bc.Initramfs != "" {
 			initramfs, err = os.Open(bc.Initramfs)
