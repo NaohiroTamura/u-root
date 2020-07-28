@@ -156,8 +156,9 @@ func (bc *BootConfig) Boot() error {
 		if err != nil {
 			panic(err)
 		}
-		bc.Kernel = "/tmp/Image"
+		// bc.Kernel = "/tmp/Image"
 		image, err := os.OpenFile("/tmp/Image", os.O_RDWR|os.O_CREATE, 0755)
+		// kernel, image, err := os.Pipe()
 		if err != nil {
 			panic(err)
 		}
