@@ -473,6 +473,9 @@ func (b BlockDevices) FilterPartType(guid string) BlockDevices {
 			if part.IsEmpty() {
 				continue
 			}
+			// tamura
+			log.Printf("%s%d : %s", device.Name, i+1, strings.ToLower(part.Type.String()))
+			//
 			if strings.ToLower(part.Type.String()) == strings.ToLower(guid) {
 				names = append(names, fmt.Sprintf("%s%d", device.Name, i+1))
 			}

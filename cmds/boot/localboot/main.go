@@ -225,6 +225,13 @@ func main() {
 
 	// TODO boot from EFI system partitions.
 
+	// tamura
+	// devices = append([]*block.BlockDev{&block.BlockDev{Name: "mapper/cl-root"},
+	//	&block.BlockDev{Name: "mapper/cl-swap"},}, devices...)
+	//devices = append(devices, &block.BlockDev{Name: "mapper/cl-root", FSType: "xfs"})
+	//devices = append(devices, &block.BlockDev{Name: "mapper/cl-swap"})
+	//
+
 	if *flagGrubMode {
 		if err := BootGrubMode(devices, *flagBaseMountPoint, *flagDeviceGUID, *flagDryRun, *flagConfigIdx); err != nil {
 			log.Fatal(err)
