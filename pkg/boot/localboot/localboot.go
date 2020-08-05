@@ -18,9 +18,11 @@ import (
 	"github.com/u-root/u-root/pkg/ulog"
 )
 
+
 // parse treats device as a block device with a file system.
 func parse(l ulog.Logger, device *block.BlockDev, devices block.BlockDevices, mountDir string, mountPool *mount.Pool) []boot.OSImage {
 	imgs, err := bls.ScanBLSEntries(l, mountDir)
+	l.Printf("BLS imgs : %v\n", imgs)
 	if err != nil {
 		l.Printf("No systemd-boot BootLoaderSpec configs found on %s, trying another format...: %v", device, err)
 	}
@@ -29,6 +31,7 @@ func parse(l ulog.Logger, device *block.BlockDev, devices block.BlockDevices, mo
 	// from another partition, thus it is given devices and mountPool in
 	// order to reuse mounts and mount more file systems.
 	grubImgs, err := grub.ParseLocalConfig(context.Background(), mountDir, devices, mountPool)
+	l.Printf("grubImgs : %v\n", grubImgs)
 	if err != nil {
 		l.Printf("No GRUB configs found on %s, trying another format...: %v", device, err)
 	}

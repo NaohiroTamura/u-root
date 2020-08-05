@@ -15,25 +15,36 @@ import (
 )
 
 var blsEntries = []struct {
+	fsRoot string
 	entry string
 	err   string
 }{
 	{
+		fsRoot: "./testdata/madeup",
 		entry: "entry-1.conf",
 	},
 	{
+		fsRoot: "./testdata/madeup",
 		entry: "entry-2.conf",
 		err:   "neither linux, efi, nor multiboot present in BootLoaderSpec config",
+	},
+	{
+		fsRoot: "./testdata/centos_8",
+		entry: "9151c934991a474b9f86e3e7be1d25e6-4.18.0-147.el8.x86_64.conf",
+	},
+	{
+		fsRoot: "./testdata/centos_8",
+		entry: "9151c934991a474b9f86e3e7be1d25e6-0-rescue.conf",
 	},
 }
 
 func TestParseBLSEntries(t *testing.T) {
-	fsRoot := "./testdata/madeup"
-	dir := filepath.Join(fsRoot, "loader/entries")
 
 	for _, tt := range blsEntries {
+		dir := filepath.Join(tt.fsRoot, "loader/entries")
+
 		t.Run(tt.entry, func(t *testing.T) {
-			image, err := parseBLSEntry(filepath.Join(dir, tt.entry), fsRoot)
+			image, err := parseBLSEntry(filepath.Join(dir, tt.entry), tt.fsRoot)
 			if err != nil {
 				if tt.err == "" {
 					t.Fatalf("Got error %v", err)

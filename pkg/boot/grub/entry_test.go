@@ -47,3 +47,13 @@ initrd=initramfs.cpio
 		t.Errorf("ParseEnvFile(%q) diff(-want, +got) = \n%s", file, diff)
 	}
 }
+
+
+func TestParseLocalEnv(t *testing.T) {
+
+	res, err := ParseLocalEnv("../bls/testdata/centos_8")
+	if err != nil {
+		t.Errorf("ParseLocalEnv failed: %v\n", err)
+	}
+	t.Logf("ParseLocalEnv res: %v\n", res)
+}

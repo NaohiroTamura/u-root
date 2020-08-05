@@ -93,15 +93,19 @@ func ParseLocalConfig(ctx context.Context, diskDir string, devices block.BlockDe
 	if err != nil {
 		log.Printf("[grub] Could not glob for %s/EFI/*/grub.cfg: %v", diskDir, err)
 	}
+	log.Printf("files : %v\n", files)
 	var relNames []string
 	for _, file := range files {
+		log.Printf("file : %v, diskDir : %v\n", file, diskDir)
 		base, err := filepath.Rel(diskDir, file)
+		log.Printf("base : %v, err : %v\n", base, err)
 		if err == nil {
 			relNames = append(relNames, base)
 		}
 	}
 
 	for _, relname := range append(relNames, probeGrubFiles...) {
+		log.Printf("relname : %v\n", relname)
 		c, err := ParseConfigFile(ctx, curl.DefaultSchemes, relname, root, devices, mountPool)
 		if curl.IsURLError(err) {
 			continue
