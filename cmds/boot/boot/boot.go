@@ -100,6 +100,9 @@ func main() {
 		}
 	}
 
+	// tamura
+	log.Printf("Booting from the following mounted devices: %v", mps)
+
 	menuEntries := menu.OSImages(*verbose, images...)
 	menuEntries = append(menuEntries, menu.Reboot{})
 	menuEntries = append(menuEntries, menu.StartShell{})

@@ -162,7 +162,8 @@ func parseLinuxImage(vals map[string]string, fsRoot string) (boot.OSImage, error
 
 		// TODO: initrd may be specified more than once.
 		case "initrd":
-			f, err := os.Open(filePath(fsRoot, val))
+			v := strings.Split(val, " ")
+			f, err := os.Open(filePath(fsRoot, v[0]))
 			if err != nil {
 				return nil, err
 			}

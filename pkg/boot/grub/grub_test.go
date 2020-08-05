@@ -45,3 +45,12 @@ func TestCmdlineQuote(t *testing.T) {
 		})
 	}
 }
+
+func TestParseLocalEnv(t *testing.T) {
+
+	res, err := ParseLocalEnv("../bls/testdata/centos_8")
+	if err != nil {
+		t.Errorf("ParseLocalEnv failed: %v\n", err)
+	}
+	t.Logf("ParseLocalEnv res: %v\n", res)
+}

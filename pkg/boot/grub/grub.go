@@ -20,6 +20,7 @@ import (
 	"io"
 	"log"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -61,15 +62,19 @@ func ParseLocalConfig(ctx context.Context, diskDir string) ([]boot.OSImage, erro
 	if err != nil {
 		log.Printf("[grub] Could not glob for %s/EFI/*/grub.cfg: %v", diskDir, err)
 	}
+	log.Printf("files : %v\n", files)
 	var relNames []string
 	for _, file := range files {
+		log.Printf("file : %v, diskDir : %v\n", file, diskDir)
 		base, err := filepath.Rel(diskDir, file)
+		log.Printf("base : %v, err : %v\n", base, err)
 		if err == nil {
 			relNames = append(relNames, base)
 		}
 	}
 
 	for _, relname := range append(relNames, probeGrubFiles...) {
+		log.Printf("relname : %v\n", relname)
 		c, err := ParseConfigFile(ctx, curl.DefaultSchemes, relname, wd)
 		if curl.IsURLError(err) {
 			continue
@@ -345,4 +350,28 @@ func (c *parser) append(ctx context.Context, config string) error {
 	}
 	return nil
 
+}
+
+//
+//
+//
+func ParseLocalEnv(diskDir string) (string, error) {
+
+	files, err := filepath.Glob(filepath.Join(diskDir, "EFI", "*", "grubenv"))
+	if err != nil {
+		log.Printf("[grubenv] Could not glob for %s/EFI/*/grubenv: %v", diskDir, err)
+	}
+	log.Printf("[grubenv] files : %v\n", files)
+	for _, file := range files {
+		log.Printf("[grubenv] file : %v, diskDir : %v\n", file, diskDir)
+		env, err := os.Open(file)
+		defer env.Close()
+		envfile, err := ParseEnvFile(env)
+		log.Printf("[grubenv] envfile : %v\n", envfile)
+		if val, key := envfile.Vars["kernelopts"]; err == nil && key {
+			return val, nil
+		}
+	}
+
+	return "", fmt.Errorf("no valid grubenv found")
 }
