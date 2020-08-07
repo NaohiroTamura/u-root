@@ -35,6 +35,7 @@ import (
 
 	"github.com/u-root/u-root/pkg/boot"
 	"github.com/u-root/u-root/pkg/boot/bootcmd"
+	"github.com/u-root/u-root/pkg/boot/grub"
 	"github.com/u-root/u-root/pkg/boot/localboot"
 	"github.com/u-root/u-root/pkg/boot/menu"
 	"github.com/u-root/u-root/pkg/cmdline"
@@ -93,14 +94,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, img := range images {
-		// Make changes to the kernel command line based on our cmdline.
-		if li, ok := img.(*boot.LinuxImage); ok {
-			li.Cmdline = updateBootCmdline(li.Cmdline)
+
+	var kerneloptsArray []string
+	for _, mp := range mps {
+		kernelopts, err := grub.ParseLocalEnv(mp.Path)
+		if err != nil {
+			l.Printf("kernelopts : %v\n", err)
+		} else {
+			l.Printf("kernelopts : %v\n", kernelopts)
+			kerneloptsArray = append(kerneloptsArray, kernelopts)
 		}
 	}
 
-	// tamura
+	log.Printf("li.Cmdline : start\n")
+	for _, img := range images {
+		// Make changes to the kernel command line based on our cmdline.
+		if li, ok := img.(*boot.LinuxImage); ok {
+			log.Printf("li.Cmdline : %v\n", li.Cmdline)
+			li.Cmdline = strings.Replace(li.Cmdline, "$kernelopts", kerneloptsArray[0], 1)
+			li.Cmdline = updateBootCmdline(li.Cmdline)
+			log.Printf("li.Cmdline : %v\n", li.Cmdline)
+		}
+	}
+	log.Printf("li.Cmdline : end\n")
+	log.Printf("Boot images : %v\n", images)
 	log.Printf("Booting from the following mounted devices: %v", mps)
 
 	menuEntries := menu.OSImages(*verbose, images...)

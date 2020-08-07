@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/u-root/u-root/pkg/boot"
 	"github.com/u-root/u-root/pkg/boot/bls"
@@ -82,7 +81,6 @@ func Localboot(l ulog.Logger, blockDevs block.BlockDevices) ([]boot.OSImage, []*
 
 	var images []boot.OSImage
 	var mps []*mount.MountPoint
-	var kerneloptsArray []string
 	for _, device := range blockDevs {
 		imgs, mmps := parseUnmounted(l, device)
 		if len(imgs) > 0 {
@@ -98,28 +96,11 @@ func Localboot(l ulog.Logger, blockDevs block.BlockDevices) ([]boot.OSImage, []*
 				continue
 			}
 
-			kernelopts, err := grub.ParseLocalEnv(dir)
-			if err != nil {
-				l.Printf("kernelopts : %v\n", err)
-			} else {
-				l.Printf("kernelopts : %v\n", kernelopts)
-				kerneloptsArray = append(kerneloptsArray, kernelopts)
-			}
-
-
 			imgs = parse(l, device, dir)
 			images = append(images, imgs...)
 			mps = append(mps, mp)
 		}
 	}
-
-	l.Printf("img.(*boot.LinuxImage).Cmdline : start\n")
-	for _, img := range images {
-		l.Printf("img.(*boot.LinuxImage).Cmdline : %v\n", img.(*boot.LinuxImage).Cmdline)
-		img.(*boot.LinuxImage).Cmdline = strings.Replace(img.(*boot.LinuxImage).Cmdline, "$kernelopts", kerneloptsArray[0], 1)
-		l.Printf("img.(*boot.LinuxImage).Cmdline : %v\n", img.(*boot.LinuxImage).Cmdline)
-	}
-	l.Printf("img.(*boot.LinuxImage).Cmdline : end\n")
 
 	return images, mps, nil
 }
