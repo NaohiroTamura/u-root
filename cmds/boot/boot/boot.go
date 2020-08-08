@@ -111,7 +111,10 @@ func main() {
 		// Make changes to the kernel command line based on our cmdline.
 		if li, ok := img.(*boot.LinuxImage); ok {
 			log.Printf("li.Cmdline : %v\n", li.Cmdline)
-			li.Cmdline = strings.Replace(li.Cmdline, "$kernelopts", kerneloptsArray[0], 1)
+			if l := len(kerneloptsArray); l > 0 {
+				log.Printf("kerneloptsArray length : %v\n", l)
+				li.Cmdline = strings.Replace(li.Cmdline, "$kernelopts", kerneloptsArray[0], 1)
+			}
 			li.Cmdline = updateBootCmdline(li.Cmdline)
 			log.Printf("li.Cmdline : %v\n", li.Cmdline)
 		}
