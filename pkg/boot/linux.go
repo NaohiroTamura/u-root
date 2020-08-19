@@ -5,6 +5,7 @@
 package boot
 
 import (
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +15,8 @@ import (
 
 	"github.com/u-root/u-root/pkg/boot/kexec"
 	"github.com/u-root/u-root/pkg/uio"
+
+	"golang.org/x/sys/cpu"
 )
 
 // LinuxImage implements OSImage for a Linux kernel + initramfs.
@@ -51,12 +54,23 @@ func (li *LinuxImage) String() string {
 }
 
 func copyToFile(r io.Reader) (*os.File, error) {
+	var reader io.Reader
+	if cpu.ARM64.HasFP {
+		var err error
+		reader, err = gzip.NewReader(r)
+		if err != nil {
+			return nil, err
+		}
+		defer reader.(*gzip.Reader).Close()
+	} else {
+		reader = r
+	}
 	f, err := ioutil.TempFile("", "nerf-netboot")
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	if _, err := io.Copy(f, r); err != nil {
+	if _, err := io.Copy(f, reader); err != nil {
 		return nil, err
 	}
 	if err := f.Sync(); err != nil {
