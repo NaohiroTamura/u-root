@@ -23,6 +23,7 @@ import (
 func parse(l ulog.Logger, device *block.BlockDev, devices block.BlockDevices, mountDir string, mountPool *mount.Pool) []boot.OSImage {
 	imgs, err := bls.ScanBLSEntries(l, mountDir)
 	l.Printf("BLS imgs : %v\n", imgs)
+	l.Printf("BLS mountDir : %v\n", mountDir)
 	if err != nil {
 		l.Printf("No systemd-boot BootLoaderSpec configs found on %s, trying another format...: %v", device, err)
 	}
@@ -81,14 +82,18 @@ func Localboot(l ulog.Logger, blockDevs block.BlockDevices, mp *mount.Pool) ([]b
 	var images []boot.OSImage
 	for _, device := range blockDevs {
 		imgs := parseUnmounted(l, device, mp)
+		l.Printf("LocalBoot imgs-1 : %v : %v : %v\n", imgs, device, mp)
 		if len(imgs) > 0 {
 			images = append(images, imgs...)
 		} else {
 			m, err := mp.Mount(device, mount.ReadOnly)
+			l.Printf("LocalBoot m : %v : device = %v\n", m, device)
 			if err != nil {
+				l.Printf("LocalBoot err : %v\n", err)
 				continue
 			}
 			imgs = parse(l, device, blockDevs, m.Path, mp)
+			l.Printf("LocalBoot imgs-2 : %v : %v : %v : %v : %v\n", imgs, device, blockDevs, m.Path, mp)
 			images = append(images, imgs...)
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -164,7 +165,8 @@ type Pool struct {
 // determine whether it has already been mounted.
 func (p *Pool) Mount(mounter Mounter, flags uintptr) (*MountPoint, error) {
 	for _, m := range p.MountPoints {
-		if m.Device == mounter.DevName() {
+		log.Printf("Pool.Mount : %v == %v\n", m.Device, mounter.DevName())
+		if m.Device == filepath.Join("/dev/", mounter.DevName()) {
 			return m, nil
 		}
 	}

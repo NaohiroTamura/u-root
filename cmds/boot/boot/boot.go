@@ -97,8 +97,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Printf("images : %v\n", images)
+	log.Printf("mountPool : %v\n", mountPool)
+
 	var kerneloptsArray []string
-	for _, mp := range mps {
+	for _, mp := range mountPool.MountPoints {
 		kernelopts, err := grub.ParseLocalEnv(mp.Path)
 		if err != nil {
 			l.Printf("kernelopts : %v\n", err)
@@ -123,7 +126,7 @@ func main() {
 	}
 	log.Printf("li.Cmdline : end\n")
 	log.Printf("Boot images : %v\n", images)
-	log.Printf("Booting from the following mounted devices: %v", mps)
+	log.Printf("Booting from the following mounted devices: %v", mountPool.MountPoints)
 
 	menuEntries := menu.OSImages(*verbose, images...)
 	menuEntries = append(menuEntries, menu.Reboot{})
